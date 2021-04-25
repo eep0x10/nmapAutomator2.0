@@ -15,6 +15,16 @@ This will ensure two things:
 Once initial ports are found '*in 5-10 seconds*', we can start manually looking into those ports, and let the rest run in the background with no interaction from our side whatsoever.  
 
 ## Features
+### NEW
+- Wafw00f
+- Whatweb
+- Spidering Hakwraler
+- 3 types ffuf enum (Fast, Full, Arquives find)
+- Remove nikto
+- Better TCP Scan
+- Better UDP Scan
+- Web Checklist
+- DNS Checklist
 
 ### Scans
 1. **Network** : Shows all live hosts in the host's network (~15 seconds)
