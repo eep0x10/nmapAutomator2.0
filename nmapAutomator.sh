@@ -603,12 +603,12 @@ reconRecommend() {
                 printf "${NC}\n"
                 printf "${YELLOW}DNS Recon:\n"
                 printf "${NC}\n"
-                printf "Checklist: \n [ ] Add ip host on /etc/hosts \n [ ] Check all servers \n [ ] Try zone transfer (dig AXFR <DNS> @<Dominio/ip>) "
-                echo "host -l \"${HOST}\" \"${DNSSERVER}\" | tee \"recon/hostname_${HOST}.txt\""
-                echo "dnsrecon -r \"${subnet}/24\" -n \"${DNSSERVER}\" | tee \"recon/dnsrecon_${HOST}.txt\""
-                echo "dnsrecon -r 127.0.0.0/24 -n \"${DNSSERVER}\" | tee \"recon/dnsrecon-local_${HOST}.txt\""
-                echo "dig -x \"${HOST}\" @${DNSSERVER} | tee \"recon/dig_${HOST}.txt\""
-                echo "dnsenum --enum ${DNSSERVER} | tee \"recon/dig_${HOST}.txt\""
+                #printf "Checklist: \n [ ] Add ip host on /etc/hosts \n [ ] Check all servers \n [ ] Try zone transfer (dig AXFR <DNS> @<Dominio/ip>) "
+                #echo "host -l \"${HOST}\" \"${DNSSERVER}\" | tee \"recon/hostname_${HOST}.txt\""
+                #echo "dnsrecon -r \"${subnet}/24\" -n \"${DNSSERVER}\" | tee \"recon/dnsrecon_${HOST}.txt\""
+                #echo "dnsrecon -r 127.0.0.0/24 -n \"${DNSSERVER}\" | tee \"recon/dnsrecon-local_${HOST}.txt\""
+                #echo "dig -x \"${HOST}\" @${DNSSERVER} | tee \"recon/dig_${HOST}.txt\""
+                #echo "dnsenum --enum ${DNSSERVER} | tee \"recon/dig_${HOST}.txt\""
                 echo
         fi
 
@@ -656,26 +656,26 @@ reconRecommend() {
                         fi
                 done
                 # CMS recon
-                if [ -f "nmap/Script_${HOST}.nmap" ]; then
-                        cms="$(grep http-generator "nmap/Script_${HOST}.nmap" | cut -d " " -f 2)"
-                        if [ -n "${cms}" ]; then
-                                for line in ${cms}; do
-                                        port="$(sed -n 'H;x;s/\/.*'"${line}"'.*//p' "nmap/Script_${HOST}.nmap")"
-
-                                        # case returns 0 by default (no match), so ! case returns 1
-                                        if ! case "${cms}" in Joomla | WordPress | Drupal) false ;; esac then
-                                                printf "${NC}\n"
-                                                printf "${YELLOW}CMS Recon:\n"
-                                                printf "${NC}\n"
-                                        fi
-                                        case "${cms}" in
-                                        Joomla!) echo "joomscan --url \"${HOST}:${port}\" | tee \"recon/joomscan_${HOST}_${port}.txt\"" ;;
-                                        WordPress) echo "wpscan --url \"${HOST}:${port}\" --enumerate p | tee \"recon/wpscan_${HOST}_${port}.txt\"" ;;
-                                        Drupal) echo "droopescan scan drupal -u \"${HOST}:${port}\" | tee \"recon/droopescan_${HOST}_${port}.txt\"" ;;
-                                        esac
-                                done
-                        fi
-                fi
+#                if [ -f "nmap/Script_${HOST}.nmap" ]; then
+#                        cms="$(grep http-generator "nmap/Script_${HOST}.nmap" | cut -d " " -f 2)"
+#                        if [ -n "${cms}" ]; then
+#                                for line in ${cms}; do
+#                                        port="$(sed -n 'H;x;s/\/.*'"${line}"'.*//p' "nmap/Script_${HOST}.nmap")"
+#
+#                                        # case returns 0 by default (no match), so ! case returns 1
+#                                        if ! case "${cms}" in Joomla | WordPress | Drupal) false ;; esac then
+#                                                printf "${NC}\n"
+#                                                printf "${YELLOW}CMS Recon:\n"
+#                                                printf "${NC}\n"
+#                                        fi
+#                                        case "${cms}" in
+#                                        Joomla!) echo "joomscan --url \"${HOST}:${port}\" | tee \"recon/joomscan_${HOST}_${port}.txt\"" ;;
+#                                        WordPress) echo "wpscan --url \"${HOST}:${port}\" --enumerate p | tee \"recon/wpscan_${HOST}_${port}.txt\"" ;;
+#                                        Drupal) echo "droopescan scan drupal -u \"${HOST}:${port}\" | tee \"recon/droopescan_${HOST}_${port}.txt\"" ;;
+#                                        esac
+#                                done
+#                        fi
+#                fi
         fi
 
         # SNMP recon
@@ -694,8 +694,8 @@ reconRecommend() {
                 printf "${YELLOW}ldap Recon:\n"
                 printf "${NC}\n"
                 echo "ldapsearch -x -h \"${HOST}\" -s base | tee \"recon/ldapsearch_${HOST}.txt\""
-                echo "ldapsearch -x -h \"${HOST}\" -b \"\$(grep rootDomainNamingContext \"recon/ldapsearch_${HOST}.txt\" | cut -d ' ' -f2)\" | tee \"recon/ldapsearch_DC_${HOST}.txt\""
-                echo "nmap -Pn -p 389 --script ldap-search --script-args 'ldap.username=\"\$(grep rootDomainNamingContext \"recon/ldapsearch_${HOST}.txt\" | cut -d \\" \\" -f2)\"' \"${HOST}\" -oN \"recon/nmap_ldap_${HOST}.txt\""
+                echo "ldapsearch -x -h \"${HOST}\" -b \"\$(grep rootDomainNamingContext\"recon/ldapsearch_${HOST}.txt\" | cut -d ' ' -f2)\" | tee \"recon/ldapsearch_DC_${HOST}.txt\""
+                echo "nmap -p389 -Pn --script ldap-search --script-args 'ldap.username=\"\$(grep rootDomainNamingContext \"recon/ldapsearch_${HOST}.txt\" | cut -d \\" \\" -f2)\"' \"${HOST}\" -oN \"recon/nmap_ldap_${HOST}.txt\""
                 echo
         fi
 
