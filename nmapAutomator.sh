@@ -110,7 +110,7 @@ usage() {
         printf "Scan Types:\n"
         printf "${YELLOW}\tNetwork : ${NC}Shows all live hosts in the host's network ${YELLOW}(~15 seconds)\n"
         printf "${YELLOW}\tPort    : ${NC}Shows all open ports ${YELLOW}(~15 seconds)\n"
-        printf "${YELLOW}\tScript  : ${NC}Runs a script scan on found ports ${YELLOW}(~5 minutes)\n"
+        printf "${YELLOW}\tScript  : ${NC}Runs a cript scan on found ports ${YELLOW}(~5 minutes)\n"
         printf "${YELLOW}\tFull    : ${NC}Runs a full range port scan, then runs a script scan on new ports ${YELLOW}(~5-10 minutes)\n"
         printf "${YELLOW}\tUDP     : ${NC}Runs a UDP scan \"requires sudo\" ${YELLOW}(~5 minutes)\n"
         printf "${YELLOW}\tVulns   : ${NC}Runs CVE scan and nmap Vulns scan on all found ports ${YELLOW}(~5-15 minutes)\n"
@@ -461,8 +461,8 @@ UDPScan() {
 vulnsScan() {
         printf "${GREEN}---------------------Starting Vulns Scan-----------------------\n"
         printf "${NC}\n"
-
-        if ! $REMOTE; then
+	if $REMOTE; then
+        #if ! $REMOTE; then (NO CVE  SCAN)
                 # Set ports to be scanned (common or all)
                 if [ -z "${allPorts}" ]; then
                         portType="common"
@@ -492,8 +492,8 @@ vulnsScan() {
                 printf "${YELLOW}This may take a while, depending on the number of detected services..\n"
                 printf "${NC}\n"
                 nmapProgressBar "${nmapType} -sV --script vuln -p${ports} --open -oN nmap/Vulns_${HOST}.nmap ${HOST} ${DNSSTRING}" 3
-        else
-                printf "${YELLOW}Vulns Scan is not supported in Remote mode.\n${NC}"
+        #else (NO CVE SCAN)
+                #printf "${YELLOW}Vulns Scan is not supported in Remote mode.\n${NC}"
         fi
 
         echo
@@ -643,11 +643,11 @@ reconRecommend() {
 					echo " ~/go/bin/hakrawler -url http://${HOST} -depth 2 -all | tee \"recon/ffuf_${HOST}_${port}.txt\""
                                         #extensions="$(echo 'index' >./index && ffuf -s -w ./index:FUZZ -mc '200,302' -e '.txt' -u "${urlType}${HOST}:${port}/FUZZ" 2>/dev/null | awk -vORS=, -F 'index' '{print $2}' | sed 's/.$//' && rm ./index)"
                                         #FFUF FAST
-                                	echo "ffuf -c -w /usr/share/wordlists/dirb/common.txt -t 80 -u \"${urlType}${HOST}:${port}/FUZZ/\" | tee \"recon/ffuf_${HOST}_${port}.txt\""
+                                	echo "ffuf -c -w /usr/share/wordlists/dirb/common.txt -t 80 -e '/' -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0' -u \"${urlType}${HOST}:${port}/FUZZ/\" | tee \"recon/ffuf_${HOST}_${port}.txt\""
                                 	#FFUF FULL
-                                	echo "ffuf -c -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -t 80 -e .txt,.php -u \"${urlType}${HOST}:${port}/FUZZ/\" | tee \"recon/ffuf_${HOST}_${port}.txt\""
+                                	echo "ffuf -c -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -t 80 -e '/',.txt,.php -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0' -u \"${urlType}${HOST}:${port}/FUZZ/\" | tee \"recon/ffuf_${HOST}_${port}.txt\""
                                 	#FFUF FULL ARCHIVES
-                                	#echo "ffuf -c -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -t 80 -e .txt,.php,.pdf,.html,.asp -u \"${urlType}${HOST}:${port}/FUZZ/\" | tee \"recon/ffuf_${HOST}_${port}.txt\""
+                                	#echo "ffuf -c -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -t 80 -e '/',.txt,.php,.pdf,.html,.asp -u \"${urlType}${HOST}:${port}/FUZZ/\" | tee \"recon/ffuf_${HOST}_${port}.txt\""
                                 else
                                         extensions="$(echo 'index' >./index && gobuster dir -w ./index -t 30 -qnkx '.asp,.aspx,.html,.jsp,.php' -s '200,302' -u "${urlType}${HOST}:${port}" 2>/dev/null | awk -vORS=, -F 'index' '{print $2}' | sed 's/.$//' && rm ./index)"
                                         echo "gobuster dir -w /usr/share/wordlists/dirb/common.txt -t 30 -elkx '${extensions}' -u \"${urlType}${HOST}:${port}\" -o \"recon/gobuster_${HOST}_${port}.txt\""
