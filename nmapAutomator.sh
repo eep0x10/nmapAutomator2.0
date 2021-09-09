@@ -346,7 +346,7 @@ scriptScan() {
                 if [ -z "${commonPorts}" ]; then
                         printf "${YELLOW}No ports in port scan.. Skipping!\n"
                 else
-                        nmapProgressBar "${nmapType} -sCV -p${commonPorts} --open -oN nmap/Script_${HOST}.nmap ${HOST} ${DNSSTRING}" 2
+                        nmapProgressBar "${nmapType} -Pn -A -p${commonPorts} --open -oN nmap/Script_${HOST}.nmap ${HOST} ${DNSSTRING}" 2
                 fi
 
                 # Modify detected OS if Nmap detects a different OS
@@ -375,7 +375,7 @@ fullScan() {
         printf "${NC}\n"
 
         if ! $REMOTE; then
-                nmapProgressBar "${nmapType} -p- --max-retries 1 --min-rate 10000 --max-scan-delay 20 -T4 -v --open -oN nmap/Full_${HOST}.nmap ${HOST} ${DNSSTRING}" 3 #max-rate 500
+                nmapProgressBar "${nmapType} -Pn -p- --max-retries 1 --min-rate 10000 --max-scan-delay 20 -T4 -v --open -oN nmap/Full_${HOST}.nmap ${HOST} ${DNSSTRING}" 3 #max-rate 500
                 assignPorts "${HOST}"
 
                 # Nmap version and default script scan on found ports if Script scan was not run yet
@@ -384,7 +384,7 @@ fullScan() {
                         echo
                         printf "${YELLOW}Making a script scan on all ports\n"
                         printf "${NC}\n"
-                        nmapProgressBar "${nmapType} -sCV -p${allPorts} --open -oN nmap/Full_Extra_${HOST}.nmap ${HOST} ${DNSSTRING}" 2
+                        nmapProgressBar "${nmapType} -Pn -sT -p${allPorts} --open -oN nmap/Full_Extra_${HOST}.nmap ${HOST} ${DNSSTRING}" 2
                         assignPorts "${HOST}"
                 # Nmap version and default script scan if any extra ports are found
                 else
@@ -400,7 +400,7 @@ fullScan() {
                                 echo
                                 printf "${YELLOW}Making a script scan on extra ports: $(echo "${extraPorts}" | sed 's/,/, /g')\n"
                                 printf "${NC}\n"
-                                nmapProgressBar "${nmapType} -sCV -p${extraPorts} --open -oN nmap/Full_Extra_${HOST}.nmap ${HOST} ${DNSSTRING}" 2
+                                nmapProgressBar "${nmapType} -Pn -A -p${extraPorts} --open -oN nmap/Full_Extra_${HOST}.nmap ${HOST} ${DNSSTRING}" 2
                                 assignPorts "${HOST}"
                         fi
                 fi
@@ -426,7 +426,7 @@ UDPScan() {
                         echo
                 fi
 
-                nmapProgressBar "sudo ${nmapType} -sU --reason --top-ports=20 -max-retries 1 --open --open -oN nmap/UDP_${HOST}.nmap ${HOST} ${DNSSTRING}" 3
+                nmapProgressBar "sudo ${nmapType} -sU --reason --top-ports=20 -max-retries 1 --open -oN nmap/UDP_${HOST}.nmap ${HOST} ${DNSSTRING}" 3
                 assignPorts "${HOST}"
 
                 # Nmap version and default script scan on found UDP ports
@@ -641,11 +641,13 @@ reconRecommend() {
 					echo "whatweb -a 3 http://${HOST} -v | tee \"recon/ffuf_${HOST}_${port}.txt\""
 					#SPIDER
 					echo " ~/go/bin/hakrawler -url http://${HOST} -depth 2 -all | tee \"recon/ffuf_${HOST}_${port}.txt\""
+                                        #Dirsearch
+                                        echo "dirsearch -u http://${HOST} -q | tee \"recon/ffuf_${HOST}_${port}.txt\""
                                         #extensions="$(echo 'index' >./index && ffuf -s -w ./index:FUZZ -mc '200,302' -e '.txt' -u "${urlType}${HOST}:${port}/FUZZ" 2>/dev/null | awk -vORS=, -F 'index' '{print $2}' | sed 's/.$//' && rm ./index)"
                                         #FFUF FAST
                                 	echo "ffuf -c -w /usr/share/wordlists/dirb/common.txt -t 80 -e '/' -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0' -u \"${urlType}${HOST}:${port}/FUZZ/\" | tee \"recon/ffuf_${HOST}_${port}.txt\""
                                 	#FFUF FULL
-                                	echo "ffuf -c -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -t 80 -e '/',.txt,.php -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0' -u \"${urlType}${HOST}:${port}/FUZZ/\" | tee \"recon/ffuf_${HOST}_${port}.txt\""
+                                	#echo "ffuf -c -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -t 80 -e '/',.txt,.php -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0' -u \"${urlType}${HOST}:${port}/FUZZ/\" | tee \"recon/ffuf_${HOST}_${port}.txt\""
                                 	#FFUF FULL ARCHIVES
                                 	#echo "ffuf -c -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -t 80 -e '/',.txt,.php,.pdf,.html,.asp -u \"${urlType}${HOST}:${port}/FUZZ/\" | tee \"recon/ffuf_${HOST}_${port}.txt\""
                                 else
@@ -704,8 +706,9 @@ reconRecommend() {
                 printf "${NC}\n"
                 printf "${YELLOW}SMB Recon:\n"
                 printf "${NC}\n"
+                echo "nmap -Pn -v --script=smb-os-discovery,smb-enum-shares.nse,smb-enum-users.nse,smb-vuln\* --script-args=unsafe=1 -p 139,445 \"${HOST}\" | tee \"recon/smbmap_${HOST}.txt\""
                 echo "smbmap -H \"${HOST}\" | tee \"recon/smbmap_${HOST}.txt\""
-                echo "smbclient -L \"//${HOST}/\" -U \"guest\"% | tee \"recon/smbclient_${HOST}.txt\""
+                echo "smbclient -L \"//${HOST}/\" -U \"guest\"% --option='client min protocol=NT1' | tee \"recon/smbclient_${HOST}.txt\""
                 if [ "${osType}" = "Windows" ]; then
                         echo "nmap -Pn -p445 --script vuln -oN \"recon/SMB_vulns_${HOST}.txt\" \"${HOST}\""
                 elif [ "${osType}" = "Linux" ]; then
